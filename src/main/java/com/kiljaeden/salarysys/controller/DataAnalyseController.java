@@ -44,14 +44,13 @@ public class DataAnalyseController {
 
     @GetMapping("/deptList")
     public R getDeptList(){
-
         return R.ok().data(deptService.list());
     }
 
     @GetMapping("/stuffCount")
     public R getStuffCountFromByDept(){
         Map<String, Object> redisData = (Map<String, Object>) retrieveData("redis-dataAnalyse-stuffCount");
-        if(redisData != null){
+        if (redisData != null) {
             return R.ok().data(redisData);
         }
 
@@ -72,9 +71,12 @@ public class DataAnalyseController {
             resultList.add(result);
         }
 
-        storeData("redis-dataAnalyse-stuffCount",resultList);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("data", resultList);
 
-        return R.ok().data(resultList);
+        storeData("redis-dataAnalyse-stuffCount", resultMap);
+
+        return R.ok().data(resultMap);
     }
 
     private String getDeptNameById(Integer deptId, List<Dept> deptList) {
@@ -87,9 +89,14 @@ public class DataAnalyseController {
     }
 
     @GetMapping("/avgSal")
-    public R getDeptAvgSalary(){
-        Map<String, Object> redisData = (Map<String, Object>) retrieveData("redis-dataAnalyse-avgSal");
-        if(redisData!=null){
+    public R getDeptAvgSalary() {
+        Object redisDataObj = retrieveData("redis-dataAnalyse-avgSal");
+        Map<String, Object> redisData = null;
+        if (redisDataObj instanceof Map) {
+            redisData = (Map<String, Object>) redisDataObj;
+        }
+
+        if (redisData != null) {
             return R.ok().data(redisData);
         }
 
@@ -99,8 +106,19 @@ public class DataAnalyseController {
         List<Map<String, Object>> resultList = new ArrayList<>();
 
         for (Map<String, Object> stuffCountMap : list) {
-            Integer deptId = (Integer) stuffCountMap.get("deptId");
-            BigDecimal employeeCount = (BigDecimal) stuffCountMap.get("avgSalary");
+            Integer deptId = null;
+            BigDecimal employeeCount = null;
+
+            Object deptIdObj = stuffCountMap.get("deptId");
+            Object employeeCountObj = stuffCountMap.get("avgSalary");
+
+            if (deptIdObj instanceof Integer) {
+                deptId = (Integer) deptIdObj;
+            }
+
+            if (employeeCountObj instanceof BigDecimal) {
+                employeeCount = (BigDecimal) employeeCountObj;
+            }
 
             String deptName = getDeptNameById(deptId, deptList);
 
@@ -110,9 +128,12 @@ public class DataAnalyseController {
             resultList.add(result);
         }
 
-        storeData("redis-dataAnalyse-avgSal",resultList);
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("data", resultList);
 
-        return R.ok().data(resultList);
+        storeData("redis-dataAnalyse-avgSal", resultMap);
+
+        return R.ok().data(resultMap);
     }
 
 }
